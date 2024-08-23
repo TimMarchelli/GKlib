@@ -55,3 +55,7 @@ dkms.conf
 build/
 lib/
 .svn/
+
+# others
+.vscode/
+out/
