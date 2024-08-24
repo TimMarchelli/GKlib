@@ -89,14 +89,14 @@ target_compile_options(GKlib PRIVATE
 target_include_directories(GKlib 
     PUBLIC 
         $<BUILD_INTERFACE:${GKlib_SOURCE_DIR}>
-        $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}>
+        $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
 )
 
 if(MSVC)
     target_include_directories(GKlib 
         PUBLIC 
             $<BUILD_INTERFACE:${GKlib_SOURCE_DIR}/win32>
-            $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/win32>
+            $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/win32>
 )
 endif()
 
