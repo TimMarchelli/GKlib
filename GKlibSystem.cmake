@@ -120,8 +120,8 @@ if(MSVC)
     # This if checks if that value is cached or not.
     if("${HAVE_THREADLOCALSTORAGE}" MATCHES "^${HAVE_THREADLOCALSTORAGE}$")
         try_compile(HAVE_THREADLOCALSTORAGE
-        ${CMAKE_BINARY_DIR}
-        ${GKLIB_PATH}/conf/check_thread_storage.c
+        ${CMAKE_CURRENT_BINARY_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/conf/check_thread_storage.c
         COMPILE_DEFINITIONS "-D__thread=__declspec(thread)")
 
         if(HAVE_THREADLOCALSTORAGE)
