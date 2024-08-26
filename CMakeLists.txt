@@ -33,10 +33,9 @@ include(cmake/ProjectCompilerSettings.cmake)
 # the GKlib library
 add_library(GKlib 
     ${GKlib_sources} 
-    ${GKlib_includes} 
 
     # Windows specific dependencies
-    $<$<PLATFORM_ID:Windows>: ${GKlib_win32_sources} ${GKlib_win32_includes}>
+    $<$<PLATFORM_ID:Windows>: ${GKlib_win32_sources}>
 )
 
 # set C standard to C99
