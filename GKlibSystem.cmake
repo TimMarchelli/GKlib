@@ -135,7 +135,3 @@ endif()
 
 # Finally set the official C flags.
 set(GKLIB_C_FLAGS "${GKlib_COPTIONS} ${GKlib_COPTS}")
-
-# Find GKlib sources.
-file(GLOB GKlib_sources ${GKLIB_PATH}/*.c)
-file(GLOB GKlib_includes ${GKLIB_PATH}/*.h)

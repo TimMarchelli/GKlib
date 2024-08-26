@@ -18,34 +18,32 @@ set(INSTALL_CONFIG_DIR  ${CMAKE_INSTALL_LIBDIR}/cmake/GKlib)
 set(INSTALL_LIBRARY_DIR ${CMAKE_INSTALL_LIBDIR})
 set(INSTALL_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR}/GKlib)
 
-get_filename_component(abs "." ABSOLUTE)
-set(GKLIB_PATH ${abs})
-unset(abs)
+# Find GKlib sources.
+file(GLOB GKlib_sources ${CMAKE_CURRENT_SOURCE_DIR}/*.c)
+file(GLOB GKlib_includes ${CMAKE_CURRENT_SOURCE_DIR}/*.h)
+file(GLOB GKlib_win32_sources ${CMAKE_CURRENT_SOURCE_DIR}/win32/*.c)
+file(GLOB GKlib_win32_includes ${CMAKE_CURRENT_SOURCE_DIR}/win32/*.h)
+
+# other settings
 include(GKlibSystem.cmake)
 
-include_directories(".")
-if(MSVC)
-    include_directories("win32")
-    file(GLOB win32_sources RELATIVE "win32" "*.c")
-else(MSVC)
-    set(win32_sources, "")
-endif(MSVC)
+# compiler settings
+include(cmake/ProjectCompilerSettings.cmake)
 
 # the GKlib library
-add_library(GKlib ${GKlib_sources} ${win32_sources} ${GKlib_includes})
+add_library(GKlib 
+    ${GKlib_sources} 
+    ${GKlib_includes} 
+
+    # Windows specific dependencies
+    $<$<PLATFORM_ID:Windows>: ${GKlib_win32_sources} ${GKlib_win32_includes}>
+)
 
 # set C standard to C99
 set_target_properties(GKlib PROPERTIES C_STANDARD 99)
 
-# set compiler defines
-target_compile_definitions(GKlib PRIVATE
-    $<$<PLATFORM_ID:Windows>: WIN32 USE_GKREGEX >
-    $<$<PLATFORM_ID:Linux>: LINUX _FILE_OFFSET_BITS=64 >
-    $<$<PLATFORM_ID:CYGWIN>: CYGWIN >
-    $<$<C_COMPILER_ID:MSVC>: MSC _CRT_SECURE_NO_DEPRECATE >
-    $<$<AND:$<BOOL:${HAVE_THREADLOCALSTORAGE}>,$<C_COMPILER_ID:MSVC>>: "__thread=__declspec(thread)" >
-    $<$<AND:$<NOT:$<BOOL:${HAVE_THREADLOCALSTORAGE}>>,$<C_COMPILER_ID:MSVC>>: __thread= >
-)
+# set compiler settings
+ProjectCompilerSettings(GKlib)
 
 # set compiler options
 target_compile_options(GKlib PRIVATE
@@ -53,52 +51,18 @@ target_compile_options(GKlib PRIVATE
     $<$<AND:$<PLATFORM_ID:Linux>,$<C_COMPILER_ID:GNU>>:-fPIC>
 )
 
-# set warnings
-target_compile_options(GKlib PRIVATE
-    # GNU options
-    $<$<C_COMPILER_ID:GNU>: -Werror
-        -Wall 
-        -pedantic 
-        -Wno-unused-function 
-        -Wno-unused-but-set-variable 
-        -Wno-unused-variable 
-        -Wno-unknown-pragmas 
-        -Wno-unused-label 
-        -Wno-int-to-pointer-cast
-        -Wno-pointer-to-int-cast
-        -Wno-maybe-uninitialized >
-
-    # Clang options
-    $<$<C_COMPILER_ID:Clang>: -Wno-deprecated-declarations 
-        -Wno-implicit-function-declaration 
-        -Wno-format -Wno-format-invalid-specifier 
-        -Wno-format-extra-args 
-        -Wno-format-invalid-specifier 
-        -Wno-deprecated-non-prototype 
-        -Wno-int-to-void-pointer-cast 
-        -Wno-void-pointer-to-int-cast 
-        -Wno-unused-variable 
-        -Wno-unused-function 
-        -Wno-unused-but-set-variable >
-
-    # MSVC options
-    $<$<C_COMPILER_ID:MSVC>: /wd4005 /wd4311 /wd4312 >
-)
-
 # add includes
 target_include_directories(GKlib 
     PUBLIC 
         $<BUILD_INTERFACE:${GKlib_SOURCE_DIR}>
         $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}>
-)
 
-if(MSVC)
-    target_include_directories(GKlib 
-        PUBLIC 
-            $<BUILD_INTERFACE:${GKlib_SOURCE_DIR}/win32>
+        # Windows specific includes
+        $<$<PLATFORM_ID:Windows>: 
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/win32>
             $<INSTALL_INTERFACE:${INSTALL_INCLUDE_DIR}/win32>
+        >
 )
-endif()
 
 # add an alias for find
 add_library(GKlib::GKlib ALIAS GKlib)
@@ -109,18 +73,18 @@ set_target_properties(GKlib PROPERTIES
     VERSION   0.0.1
 )
 
-if(UNIX)
-    target_link_libraries(GKlib m)
-endif(UNIX)
+# link to math library in linux
+target_link_libraries(GKlib $<$<PLATFORM_ID:Linux>:m>)
 
+# build tests
 if(GKLIB_BUILD_TESTS)
-    include_directories("test")
-    add_subdirectory("test")
+    include(CTest)
+    add_subdirectory(test)
 endif()
 
 # set a project config file to enable linking to libraries in the build directory
-set(PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/GKlib-config.cmake")
-configure_package_config_file(GKlib-config.cmake.in
+set(PROJECT_CONFIG_FILE "${CMAKE_BINARY_DIR}/GKlibConfig.cmake")
+configure_package_config_file(GKlibConfig.cmake.in
   ${PROJECT_CONFIG_FILE}
   INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
 )
@@ -137,9 +101,7 @@ install(TARGETS GKlib
 install(FILES ${GKlib_includes} DESTINATION ${INSTALL_INCLUDE_DIR})
 
 # install windows includes
-if(MSVC)
-    install(FILES "win32/adapt.h" DESTINATION ${INSTALL_INCLUDE_DIR}/win32)
-endif()
+install(FILES $<$<PLATFORM_ID:Windows>:${GKlib_win32_includes}> DESTINATION ${INSTALL_INCLUDE_DIR}/win32)
 
 install(FILES
     ${PROJECT_CONFIG_FILE}

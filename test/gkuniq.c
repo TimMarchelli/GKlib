@@ -66,7 +66,7 @@ void mem_flush(const void *p, unsigned int allocation_size);
 /**************************************************************************/
 void mem_flush(const void *p, unsigned int allocation_size)
 {
-#ifndef NO_X86 
+#if !defined(NO_X86) && !defined(WIN32)
   const size_t cache_line = 64;
   const char *cp = (const char *)p;
   size_t i = 0;
