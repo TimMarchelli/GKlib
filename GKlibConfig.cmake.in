@@ -1,12 +1,9 @@
 @PACKAGE_INIT@
 
-# Include the exported CMake file
-get_filename_component(GKlib_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-
 include(CMakeFindDependencyMacro)
 
 if(NOT TARGET GKlib::GKlib)
-    include("${GKlib_CMAKE_DIR}/GKlib-targets.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/GKlib-targets.cmake")
 endif()
 
 check_required_components(GKlib)
